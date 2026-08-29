@@ -3,6 +3,6 @@
     "description": "Türkçe içerikli eklenti havuzu",
     "manifestVersion": 1,
     "pluginLists": [
-      "https://raw.githubusercontent.com/feroxx/Kekik-cloudstream/builds/plugins.json"
+      "https://github.com/atillak06/izle/raw/refs/heads/builds/plugins.json"
     ]
 }
