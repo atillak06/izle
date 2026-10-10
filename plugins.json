@@ -238,7 +238,7 @@
             "muratcesmecioglu"
         ],
         "description": "en yeni dizileri g\u00fcvenli ve h\u0131zl\u0131 \u015fekilde sunar.",
-        "fileSize": 25009,
+        "fileSize": 25012,
         "repositoryUrl": "https://github.com/atillak06/izle",
         "language": "tr",
         "tvTypes": [
@@ -247,7 +247,7 @@
         ],
         "iconUrl": "https://chessplyimages.cfd/uploads/site/favicon-32x32.png",
         "apiVersion": 1,
-        "fileHash": "sha256-8f2b19a26b0c8f9f082291cbbaff6cb73581e9d9a1fed47c762434e878880899"
+        "fileHash": "sha256-3d1bd159235c66d222be99f287bd91a963ecbe30ac167b17e1e4a6f101ef5148"
     },
     {
         "url": "https://raw.githubusercontent.com/atillak06/izle/builds/DiziYou.cs3",
