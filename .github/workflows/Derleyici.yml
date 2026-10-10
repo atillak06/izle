@@ -1,67 +1,115 @@
+
 # Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
- name: CloudStream Derleyici
- concurrency:
-   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-   cancel-in-progress: true
- 
- on:
-   workflow_dispatch:
-   push:
-     branches:
-       - master
-     paths-ignore:
-       - "**/*.md"
-       - "**/*.yml"
-       - "**/*.jpg"
-       - "**/*.png"
-       - "**/*.py"
- 
- jobs:
-   CloudStreamDerleyici:
-     runs-on: ubuntu-latest
-     steps:
-       - name: "'src' Depo Kontrolü"
-         uses: actions/checkout@v6
-         with:
-           path: "src"
- 
-       - name: "'build' Depo Kontrolü"
-         uses: actions/checkout@v6
-         with:
-           ref: "builds"
-           path: "builds"
- 
-       - name: Eski Derlemeleri Temizle
-         run: rm $GITHUB_WORKSPACE/builds/*.cs3 || true
- 
-       - name: JDK 17 Ayarla
-         uses: actions/setup-java@v5
-         with:
-           distribution: temurin
-           java-version: 17
+name: CloudStream Derleyici
 
-       - name: Setup Gradle
-         uses: gradle/actions/setup-gradle@v5
-         with:
-           cache-read-only: false
- 
-       - name: Eklentileri Derle
-         run: |
-           cd $GITHUB_WORKSPACE/src
-           chmod +x gradlew
-           ./gradlew make makePluginsJson
-           cp **/build/*.cs3 $GITHUB_WORKSPACE/builds
-           cp build/plugins.json $GITHUB_WORKSPACE/builds
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
-       - name: '@KekikAkademi ifadesini değiştir'
-         run: |
-           sed -i 's/@KekikAkademi/@feroxxcs3/g' $GITHUB_WORKSPACE/builds/repo.json
- 
-       - name: Derlemeleri Yükle
-         run: |
-           cd $GITHUB_WORKSPACE/builds
-           git config --local user.email "actions@github.com"
-           git config --local user.name "GitHub Actions"
-            git add .
-            git commit --amend -m "$GITHUB_SHA 'nın Derlenmesi" || exit 0   # eğer commit edilecek bir şey yoksa hata verme
-            git push --force 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.yml"
+      - "**/*.jpg"
+      - "**/*.png"
+      - "**/*.py"
+
+permissions:
+  contents: write
+
+jobs:
+  CloudStreamDerleyici:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "'src' Depo Kontrolü"
+        uses: actions/checkout@v6
+        with:
+          path: src
+          ref: master
+
+      - name: "'builds' Depo Kontrolü"
+        uses: actions/checkout@v6
+        with:
+          path: builds
+          ref: builds
+          fetch-depth: 0
+
+      - name: Eski Derlemeleri Temizle
+        run: rm -f "$GITHUB_WORKSPACE"/builds/*.cs3
+
+      - name: JDK 17 Ayarla
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Gradle Ayarla
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: false
+
+      - name: Eklentileri Derle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/src"
+
+          chmod +x gradlew
+          ./gradlew make makePluginsJson
+
+          mapfile -t CS3_FILES < <(
+            find . -type f -path '*/build/*.cs3'
+          )
+
+          if [ "${#CS3_FILES[@]}" -eq 0 ]; then
+            echo "::error::Derleme sonunda hiçbir .cs3 dosyası bulunamadı."
+            exit 1
+          fi
+
+          for file in "${CS3_FILES[@]}"; do
+            cp "$file" "$GITHUB_WORKSPACE/builds/"
+          done
+
+          if [ ! -f build/plugins.json ]; then
+            echo "::error::build/plugins.json bulunamadı."
+            exit 1
+          fi
+
+          cp build/plugins.json "$GITHUB_WORKSPACE/builds/"
+
+      - name: Repo Bilgisini Güncelle
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_WORKSPACE/builds/repo.json"
+
+          if [ -f "$REPO" ]; then
+            sed -i 's/@KekifAkademi/@feroxxcs3/g; s/@KekikAkademi/@feroxxcs3/g' "$REPO"
+          else
+            echo "::error::builds/repo.json bulunamadı."
+            exit 1
+          fi
+
+      - name: Derlemeleri Yükle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/builds"
+
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "Değişiklik yok; yeni commit oluşturulmadı."
+            exit 0
+          fi
+
+          git commit -m "CloudStream derlemesi ${GITHUB_SHA}"
+          git push origin HEAD:builds
