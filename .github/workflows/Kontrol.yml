@@ -62,7 +62,7 @@ jobs:
           git commit --author="keyiflerolsun <keyiflerolsun@users.noreply.github.com>" \
             -m "♻️ Domain Değişikliği" \
             -m "🔄 Otomatik domain güncellemeleri yapıldı."
-          BRANCH="domain-degisikligi"
+          BRANCH="master"
 
           git checkout -B $BRANCH
           git push origin $BRANCH --force
