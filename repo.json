@@ -1,0 +1,8 @@
+{
+    "name": "Turkish Providers Repository | @feroxxcs3",
+    "description": "Türkçe içerikli eklenti havuzu",
+    "manifestVersion": 1,
+    "pluginLists": [
+      "https://github.com/atillak06/izle/raw/refs/heads/builds/plugins.json"
+    ]
+}
